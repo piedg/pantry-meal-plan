@@ -1,0 +1,1 @@
+export type PackUnit = 'g' | 'ml';

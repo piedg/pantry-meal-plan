@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Product } from "../types/Product";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
-import { fetchProductName } from "../services/api";
+import { fetchProduct } from "../services/api";
+import { parsePack } from "../units";
 
 export function usePantry() {
 
@@ -38,11 +39,12 @@ export function usePantry() {
 
     const addFromBarcode = async (code: string) => {
         if (code === '') return;
+        if (busy) return;
         setBusy(true)
 
         try {
-            const productName = await fetchProductName(code);
-            if (productName === null) {
+            const productFound = await fetchProduct(code);
+            if (productFound === null) {
                 Alert.alert('Non trovato', 'Questo codice non è nel database.');
                 return;
             }
@@ -55,7 +57,13 @@ export function usePantry() {
                 }
                 return [
                     ...prev,
-                    { id: Date.now().toString(), name: productName, barcode: code, quantity: 1 },
+                    {
+                        id: Date.now().toString(),
+                        name: productFound.name,
+                        barcode: code,
+                        quantity: 1,
+                        ...parsePack(productFound.packText)
+                    },
                 ];
             });
             setBarcode('');
@@ -68,15 +76,18 @@ export function usePantry() {
 
     const changeQuantity = (id: string, delta: number) => {
         setProducts(prev =>
-            prev.map((p) =>
-                p.id === id ? { ...p, quantity: Math.max(p.quantity + delta, 0) } : p
-            )
+            prev.map((p) => {
+                if (p.id !== id) return p;
+                return { ...p, quantity: Math.max(p.quantity + delta, 0) };
+            })
         );
     };
 
     const removeProduct = (id: string) => {
         setProducts(prev => prev.filter((p) => p.id !== id));
     };
+
+
 
     return { addFromBarcode, changeQuantity, removeProduct, products, setProducts, barcode, setBarcode, busy }
 }

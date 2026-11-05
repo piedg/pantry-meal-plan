@@ -13,12 +13,16 @@ import {
 import { Product } from './types/Product';
 import { Filter } from './types/Filter';
 import { ProductRow } from './components/ProductRow';
-import { RenameModal } from './components/RenameModal';
+import { ProductModal } from './components/ProductModal';
+import { Draft } from './types/Draft';
+
 import { usePantry } from './hooks/usePantry';
 
+const NEW = 'new';
+const emptyDraft: Draft = { name: '', quantity: '1', packSize: '', packUnit: 'g' };
 
 export default function App() {
-  const [name, setName] = useState('');
+
   const [filter, setFilter] = useState<Filter>('all');
 
   const [permission, requestPermission] = useCameraPermissions();
@@ -26,22 +30,48 @@ export default function App() {
   const scanLock = useRef(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState('');
-
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
 
   const { products, setProducts, barcode, setBarcode, addFromBarcode, changeQuantity, removeProduct, busy } = usePantry();
 
-  const addProduct = () => {
-    if (name.trim() === '') return;
+  const startAdding = () => {
+    setEditingId(NEW);
+    setDraft(emptyDraft);
+  };
 
-    const newProduct: Product = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      quantity: 1,
+  const startEditing = (product: Product) => {
+    setEditingId(product.id);
+    setDraft({
+      name: product.name,
+      quantity: String(product.quantity),
+      packSize: product.packSize !== undefined ? String(product.packSize) : '',
+      packUnit: product.packUnit ?? 'g',
+    });
+  };
+
+  const saveProduct = () => {
+    const name = draft.name.trim();
+    if (name === '') return;
+
+    const quantity = Math.max(parseInt(draft.quantity, 10) || 0, 0);
+    const size = parseFloat(draft.packSize.replace(',', '.'));
+    const hasPack = !isNaN(size) && size > 0;
+
+    const fields = {
+      name,
+      quantity,
+      packSize: hasPack ? size : undefined,
+      packUnit: hasPack ? draft.packUnit : undefined,
     };
 
-    setProducts(prev => [...prev, newProduct]);
-    setName('');
+    if (editingId === NEW) {
+      setProducts((prev) => [...prev, { id: Date.now().toString(), ...fields }]);
+    } else {
+      setProducts((prev) =>
+        prev.map((p) => (p.id === editingId ? { ...p, ...fields } : p))
+      );
+    }
+    setEditingId(null);
   };
 
   const startScan = async () => {
@@ -61,20 +91,6 @@ export default function App() {
     scanLock.current = true;
     setScanning(false);
     addFromBarcode(data);
-  };
-
-  const startEditing = (product: Product) => {
-    setEditingId(product.id);
-    setEditingName(product.name);
-  };
-
-  const saveName = () => {
-    const trimmed = editingName.trim();
-    if (trimmed === '') return;
-    setProducts((prev) =>
-      prev.map((p) => (p.id === editingId ? { ...p, name: trimmed } : p))
-    );
-    setEditingId(null);
   };
 
   const cancelEditing = () => setEditingId(null);
@@ -105,13 +121,8 @@ export default function App() {
       <Text style={styles.title}>La mia dispensa</Text>
       {busy && <ActivityIndicator size="large" style={{ marginBottom: 8 }} />}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nome prodotto"
-        value={name}
-        onChangeText={setName}
-      />
-      <Button title="Aggiungi" onPress={addProduct} />
+
+      <Button title="➕ Aggiungi a mano" onPress={startAdding} />
 
       <TextInput
         style={styles.input}
@@ -120,8 +131,8 @@ export default function App() {
         value={barcode}
         onChangeText={setBarcode}
       />
-      <Button title="Cerca da codice" onPress={() => addFromBarcode(barcode.trim())} />
-      <Button title="📷 Scansiona" onPress={startScan} />
+      <Button title="Cerca da codice" onPress={() => addFromBarcode(barcode.trim())} disabled={busy} />
+      <Button title="📷 Scansiona" onPress={startScan} disabled={busy} />
 
       <View style={styles.filterRow}>
         <Button title="Tutti" onPress={() => setFilter('all')} />
@@ -150,11 +161,12 @@ export default function App() {
         )}
       />
 
-      <RenameModal
+      <ProductModal
         visible={editingId !== null}
-        value={editingName}
-        onChangeText={setEditingName}
-        onSave={saveName}
+        title={editingId === NEW ? 'Nuovo prodotto' : 'Modifica prodotto'}
+        draft={draft}
+        onChange={setDraft}
+        onSave={saveProduct}
         onCancel={cancelEditing}
       />
     </View>
