@@ -1,6 +1,6 @@
 import { PackUnit } from './PackUnit';
 
-export type Draft = {
+export type ProductDraft = {
     name: string;
     quantity: string;
     packSize: string;

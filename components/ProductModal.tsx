@@ -9,14 +9,14 @@ import {
     TextInput,
     View,
 } from 'react-native';
-import { Draft } from '../types/Draft';
+import { ProductDraft } from '../types/ProductDraft';
 import { PackUnit } from '../types/PackUnit';
 
 type ProductModalProps = {
     visible: boolean;
     title: string;
-    draft: Draft;
-    onChange: (draft: Draft) => void;
+    draft: ProductDraft;
+    onChange: (draft: ProductDraft) => void;
     onSave: () => void;
     onCancel: () => void;
 };

@@ -14,12 +14,13 @@ import { Product } from './types/Product';
 import { Filter } from './types/Filter';
 import { ProductRow } from './components/ProductRow';
 import { ProductModal } from './components/ProductModal';
-import { Draft } from './types/Draft';
+import { ProductDraft } from './types/ProductDraft';
 
 import { usePantry } from './hooks/usePantry';
+import { CameraScan } from './components/CameraScan';
 
 const NEW = 'new';
-const emptyDraft: Draft = { name: '', quantity: '1', packSize: '', packUnit: 'g' };
+const emptyDraft: ProductDraft = { name: '', quantity: '1', packSize: '', packUnit: 'g' };
 
 export default function App() {
 
@@ -30,7 +31,7 @@ export default function App() {
   const scanLock = useRef(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [draft, setDraft] = useState<ProductDraft>(emptyDraft);
 
   const { products, setProducts, barcode, setBarcode, addFromBarcode, changeQuantity, removeProduct, busy } = usePantry();
 
@@ -86,7 +87,7 @@ export default function App() {
     setScanning(true);
   };
 
-  const handleScanned = ({ data }: { data: string }) => {
+  const handleScanned = (data: string) => {
     if (scanLock.current) return;
     scanLock.current = true;
     setScanning(false);
@@ -100,19 +101,12 @@ export default function App() {
   const visibleProducts =
     filter === 'missing' ? products.filter((p) => p.quantity === 0) : filter === 'owned' ? products.filter((p) => p.quantity > 0) : products;
 
-
   if (scanning) {
     return (
-      <View style={StyleSheet.absoluteFill}>
-        <CameraView
-          style={StyleSheet.absoluteFill}
-          barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a'] }}
-          onBarcodeScanned={handleScanned}
-        />
-        <View style={{ position: 'absolute', bottom: 60, alignSelf: 'center' }}>
-          <Button title="Annulla" color="#fff" onPress={() => setScanning(false)} />
-        </View>
-      </View>
+      <CameraScan
+        onScanned={handleScanned}
+        onCancel={() => setScanning(false)}
+      />
     );
   }
 
@@ -121,8 +115,7 @@ export default function App() {
       <Text style={styles.title}>La mia dispensa</Text>
       {busy && <ActivityIndicator size="large" style={{ marginBottom: 8 }} />}
 
-
-      <Button title="➕ Aggiungi a mano" onPress={startAdding} />
+      <Button title="Aggiungi Prodotto" onPress={startAdding} />
 
       <TextInput
         style={styles.input}
@@ -131,6 +124,7 @@ export default function App() {
         value={barcode}
         onChangeText={setBarcode}
       />
+
       <Button title="Cerca da codice" onPress={() => addFromBarcode(barcode.trim())} disabled={busy} />
       <Button title="📷 Scansiona" onPress={startScan} disabled={busy} />
 

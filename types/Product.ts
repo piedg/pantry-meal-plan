@@ -1,5 +1,4 @@
 import { PackUnit } from "./PackUnit";
-import { QuantityUnit } from "./QuantityUnit";
 
 export type Product = {
     id: string;
