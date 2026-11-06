@@ -4,12 +4,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 import { fetchProduct } from "../services/api";
 import { parsePack } from "../units";
+import { ProductFields } from "../types/ProductFields";
 
 export function usePantry() {
 
     const [products, setProducts] = useState<Product[]>([]);
     const [loaded, setLoaded] = useState(false);
-    const [barcode, setBarcode] = useState('');
     const [busy, setBusy] = useState(false)
 
     const STORAGE_KEY = "pantry-products";
@@ -36,17 +36,25 @@ export function usePantry() {
         AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(products))
     }, [products, loaded])
 
+    const addProduct = (fields: ProductFields) => {
+        setProducts(prev => [...prev, { id: Date.now().toString(), ...fields }]);
+    };
 
-    const addFromBarcode = async (code: string) => {
-        if (code === '') return;
-        if (busy) return;
+    const updateProduct = (id: string, fields: ProductFields) => {
+        setProducts(prev => prev.map((p) => (p.id === id ? { ...p, ...fields } : p)));
+    };
+
+    const addFromBarcode = async (code: string): Promise<boolean> => {
+        if (code === '') return false;
+        if (busy) return false;
+
         setBusy(true)
 
         try {
             const productFound = await fetchProduct(code);
             if (productFound === null) {
                 Alert.alert('Non trovato', 'Questo codice non è nel database.');
-                return;
+                return false;
             }
             setProducts((prev) => {
                 const existing = prev.find((p) => p.barcode === code);
@@ -66,9 +74,10 @@ export function usePantry() {
                     },
                 ];
             });
-            setBarcode('');
+            return true
         } catch (e) {
             Alert.alert('Errore', 'Controlla la connessione e riprova.');
+            return false
         } finally {
             setBusy(false)
         }
@@ -89,5 +98,5 @@ export function usePantry() {
 
 
 
-    return { addFromBarcode, changeQuantity, removeProduct, products, setProducts, barcode, setBarcode, busy }
+    return { addFromBarcode, changeQuantity, removeProduct, products, setProducts, busy, addProduct, updateProduct }
 }

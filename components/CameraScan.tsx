@@ -1,5 +1,5 @@
-import { CameraView } from "expo-camera";
-import { Button, StyleSheet, View } from "react-native";
+import { CameraView } from 'expo-camera';
+import { Button, StyleSheet, View } from 'react-native';
 
 type CameraScanProps = {
     onScanned: (data: string) => void;
@@ -8,19 +8,21 @@ type CameraScanProps = {
 
 export function CameraScan({ onScanned, onCancel }: CameraScanProps) {
     return (
-        <View style={StyleSheet.absoluteFill}>
+        <View style={styles.container}>
             <CameraView
-                style={StyleSheet.absoluteFill}
+                style={styles.camera}
                 barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a'] }}
                 onBarcodeScanned={({ data }) => onScanned(data)}
             />
-            <View style={styles.buttonContainer}>
-                <Button title="Annulla" color="#000" onPress={onCancel} />
+            <View style={styles.cancel}>
+                <Button title="Annulla" color="#fff" onPress={onCancel} />
             </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    buttonContainer: { position: 'absolute', bottom: 60, alignSelf: 'center' }
-})
+    container: { flex: 1 },
+    camera: { flex: 1 },
+    cancel: { position: 'absolute', bottom: 60, alignSelf: 'center' },
+});
