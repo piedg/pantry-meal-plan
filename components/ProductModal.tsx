@@ -25,7 +25,7 @@ const PACK_UNITS: PackUnit[] = ['g', 'ml'];
 
 export function ProductModal({ visible, title, draft, onChange, onSave, onCancel }: ProductModalProps) {
     return (
-        <Modal visible={visible} transparent animationType="fade">
+        <Modal visible={visible} animationType="slide">
             <KeyboardAvoidingView
                 style={styles.backdrop}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
