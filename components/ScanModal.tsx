@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Button, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
 import { useCameraPermissions } from 'expo-camera';
+import { ActivityIndicator, Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { usePantryContext } from '../context/PantryContext';
 import { CameraScan } from './CameraScan';
 
@@ -16,6 +17,8 @@ export function ScanModal({ visible, onClose, onAdded }: ScanModalProps) {
     const [scanning, setScanning] = useState(false);
     const [permission, requestPermission] = useCameraPermissions();
     const scanLock = useRef(false);
+
+    const { colors } = useTheme();
 
     const close = () => {
         setScanning(false);
@@ -59,35 +62,44 @@ export function ScanModal({ visible, onClose, onAdded }: ScanModalProps) {
             {scanning ? (
                 <CameraScan onScanned={handleScanned} onCancel={() => setScanning(false)} />
             ) : (
-                <View style={styles.container}>
-                    <Text style={styles.title}>Scansiona barcode</Text>
+                <KeyboardAvoidingView
+                    style={[styles.container, { backgroundColor: colors.background }]}
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                >
+                    <Text variant="headlineSmall" style={styles.title}>
+                        Scansiona barcode
+                    </Text>
                     {busy && <ActivityIndicator size="large" />}
 
-                    <Button title="Scan barcode" onPress={startScan} disabled={busy} />
+                    <Button mode="contained" icon="camera" onPress={startScan} disabled={busy}>
+                        Apri la fotocamera
+                    </Button>
 
                     <TextInput
-                        style={styles.input}
-                        placeholder="Codice a barre"
+                        mode="outlined"
+                        label="Codice a barre"
                         keyboardType="numeric"
                         value={barcode}
                         onChangeText={setBarcode}
                     />
-                    <Button title="Cerca" onPress={search} disabled={busy} />
-                    <Button title="Chiudi" onPress={close} color="#888" />
-                </View>
+                    <Button
+                        mode="contained-tonal"
+                        icon="magnify"
+                        onPress={search}
+                        disabled={busy || barcode.trim() === ''}
+                    >
+                        Cerca
+                    </Button>
+                    <Button mode="text" icon="close" onPress={close}>
+                        Chiudi
+                    </Button>
+                </KeyboardAvoidingView>
             )}
         </Modal>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingTop: 70, paddingHorizontal: 20, gap: 12 },
-    title: { fontSize: 24, fontWeight: 'bold' },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 18,
-    },
+    container: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 12 },
+    title: { textAlign: 'center' },
 });

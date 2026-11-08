@@ -1,12 +1,12 @@
-import { Button, FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { usePantryContext } from '../../../context/PantryContext';
 import { ProductRow } from '../../../components/ProductRow';
 import { useState } from 'react';
 import { Filter } from '../../../types/Filter';
-import { Product } from '../../../types/Product';
 import { ProductDraft } from '../../../types/ProductDraft';
 import { useProductEditor } from '../../../hooks/useProductEditor';
 import { ProductModal } from '../../../components/ProductModal';
+import { SegmentedButtons, Text } from 'react-native-paper';
 
 const emptyDraft: ProductDraft = { name: '', quantity: '1', packSize: '', packUnit: 'g' };
 
@@ -25,19 +25,21 @@ export default function Products() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Tutti Prodotti</Text>
-            <View style={styles.filterRow}>
-                <Button title="Tutti" onPress={() => setFilter('all')} />
-                <Button title={`In casa (${ownedCount})`} onPress={() => setFilter('owned')} />
-                <Button
-                    title={`Mi manca (${missingCount})`}
-                    onPress={() => setFilter('missing')}
-                />
-            </View>
+            <SegmentedButtons
+                value={filter}
+                onValueChange={(v) => setFilter(v as Filter)}
+                buttons={[
+                    { value: 'all', label: 'Tutti' },
+                    { value: 'owned', label: `In casa (${ownedCount})` },
+                    { value: 'missing', label: `Mi manca (${missingCount})` },
+                ]}
+            />
 
 
             <FlatList
                 data={visibleProducts}
+                contentContainerStyle={{ paddingHorizontal: 2, paddingBottom: 16, paddingTop: 8 }}
+                ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                 keyExtractor={(item) => item.id}
                 ListEmptyComponent={
                     <Text style={styles.empty}>
