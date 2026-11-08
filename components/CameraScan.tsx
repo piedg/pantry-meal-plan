@@ -1,5 +1,6 @@
 import { CameraView } from 'expo-camera';
-import { Button, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Button } from 'react-native-paper';
 
 type CameraScanProps = {
     onScanned: (data: string) => void;
@@ -15,7 +16,7 @@ export function CameraScan({ onScanned, onCancel }: CameraScanProps) {
                 onBarcodeScanned={({ data }) => onScanned(data)}
             />
             <View style={styles.cancel}>
-                <Button title="Annulla" color="#fff" onPress={onCancel} />
+                <Button mode="contained" onPress={onCancel}>Annulla</Button>
             </View>
         </View>
     );

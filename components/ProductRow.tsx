@@ -1,4 +1,5 @@
-import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Card, IconButton, Text, useTheme } from 'react-native-paper';
 import { Product } from '../types/Product';
 import { formatAmount, totalLabel } from '../units';
 
@@ -10,39 +11,46 @@ type ProductRowProps = {
 };
 
 export function ProductRow({ product, onChangeQuantity, onRemove, onRename }: ProductRowProps) {
+    const { colors } = useTheme();
     const { quantity, packSize, packUnit } = product;
-    const hasPack = packSize !== undefined && packUnit !== undefined;
 
-    let subtitle: string | null = null;
-    if (hasPack) {
+    let subtitle: string;
+    if (quantity === 0) {
+        subtitle = 'Mancante';
+    } else if (packSize !== undefined && packUnit !== undefined) {
         const pack = formatAmount(packSize, packUnit);
-        if (quantity === 0) {
-            subtitle = 'Mancante';
-        } else if (quantity === 1) {
-            subtitle = `${quantity} × ${pack}`;
-        } else {
-            subtitle = `${quantity} × ${pack} = ${totalLabel(product)}`;
-        }
+        subtitle = quantity === 1 ? pack : `${quantity} × ${pack} = ${totalLabel(product)}`;
+    } else {
+        subtitle = `${quantity} pz`;
     }
 
+    const missing = quantity === 0;
+
     return (
-        <View style={styles.itemRow}>
-            <Pressable style={styles.itemName} onPress={() => onRename(product)}>
-                <Text style={styles.itemNameText}>{product.name}</Text>
-                {subtitle !== null && <Text style={styles.subtitle}>{subtitle}</Text>}
-            </Pressable>
-            <Button title="−" onPress={() => onChangeQuantity(product.id, -1)} />
-            <Button title="+" onPress={() => onChangeQuantity(product.id, 1)} />
-            <Button title="🗑" onPress={() => onRemove(product.id)} />
-        </View>
+        <Card
+            mode="contained"
+            onPress={() => onRename(product)}
+            style={{ backgroundColor: colors.elevation.level1 }}
+        >
+            <View style={styles.content}>
+                <View style={styles.info}>
+                    <Text variant="titleMedium">{product.name}</Text>
+                    <Text
+                        variant="bodyMedium"
+                        style={{ color: missing ? colors.error : colors.onSurfaceVariant }}
+                    >
+                        {subtitle}
+                    </Text>
+                </View>
+                <IconButton icon="minus" onPress={() => onChangeQuantity(product.id, -1)} />
+                <IconButton icon="plus" onPress={() => onChangeQuantity(product.id, 1)} />
+                <IconButton icon="delete-outline" onPress={() => onRemove(product.id)} />
+            </View>
+        </Card>
     );
 }
 
 const styles = StyleSheet.create({
-    itemRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
-    itemName: { flex: 1 },
-    itemNameText: { fontSize: 18 },
-    qty: { fontSize: 18, minWidth: 60, textAlign: 'center' },
-    unit: { fontWeight: 'bold', color: '#007AFF' },
-    subtitle: { fontSize: 15, color: '#888' }
+    content: { flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingVertical: 4 },
+    info: { flex: 1 },
 });

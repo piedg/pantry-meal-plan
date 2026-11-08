@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useProductEditor } from '../../../hooks/useProductEditor';
 import { ProductModal } from '../../../components/ProductModal';
 import { ScanModal } from '../../../components/ScanModal';
+import { Button } from 'react-native-paper';
 
 export default function Add() {
     const { startAdding, modalProps } = useProductEditor();
@@ -11,9 +12,12 @@ export default function Add() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Aggiungi prodotto</Text>
-            <Button title="Aggiungi manualmente" onPress={startAdding} />
-            <Button title="Scansiona barcode" onPress={() => setScanOpen(true)} />
+            <Button mode="contained-tonal" icon="pencil-outline" contentStyle={styles.buttonContent} onPress={startAdding}>
+                Aggiungi manualmente
+            </Button>
+            <Button mode="contained" icon="barcode-scan" contentStyle={styles.buttonContent} onPress={() => setScanOpen(true)}>
+                Scansiona barcode
+            </Button>
 
             <ProductModal {...modalProps} />
             <ScanModal
@@ -26,6 +30,6 @@ export default function Add() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingTop: 16, paddingHorizontal: 20, gap: 12 },
-    title: { fontSize: 28, fontWeight: 'bold' },
+    container: { flex: 1, padding: 16, gap: 12 },
+    buttonContent: { height: 56 },
 });
