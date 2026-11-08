@@ -6,22 +6,32 @@ import { Filter } from '../../../types/Filter';
 import { ProductDraft } from '../../../types/ProductDraft';
 import { useProductEditor } from '../../../hooks/useProductEditor';
 import { ProductModal } from '../../../components/ProductModal';
-import { SegmentedButtons, Text } from 'react-native-paper';
+import { FAB, SegmentedButtons, Text } from 'react-native-paper';
+import { ScanModal } from '../../../components/ScanModal';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
 
 const emptyDraft: ProductDraft = { name: '', quantity: '1', packSize: '', packUnit: 'g' };
 
 export default function Products() {
 
     const { products, changeQuantity, removeProduct } = usePantryContext();
-    const { startEditing, modalProps } = useProductEditor();
+    const { startEditing, startAdding, modalProps } = useProductEditor();
+    const [fabOpen, setFabOpen] = useState(false);
+    const [scanOpen, setScanOpen] = useState(false);
     const [filter, setFilter] = useState<Filter>('all');
+    const [deletingProductId, setdeletingProductId] = useState<string | null>(null);
+
+    const deletingProduct = products.find((p) => p.id === deletingProductId);
 
     const visibleProducts =
         filter === 'missing' ? products.filter((p) => p.quantity === 0) : filter === 'owned' ? products.filter((p) => p.quantity > 0) : products;
     const missingCount = products.filter((p) => p.quantity === 0).length;
     const ownedCount = products.filter((p) => p.quantity > 0).length;
 
-
+    const confirmDelete = () => {
+        if (deletingProduct) removeProduct(deletingProduct.id);
+        setdeletingProductId(null);
+    };
 
     return (
         <View style={styles.container}>
@@ -31,14 +41,14 @@ export default function Products() {
                 buttons={[
                     { value: 'all', label: 'Tutti' },
                     { value: 'owned', label: `In casa (${ownedCount})` },
-                    { value: 'missing', label: `Mi manca (${missingCount})` },
+                    { value: 'missing', label: `Manca (${missingCount})` },
                 ]}
             />
 
 
             <FlatList
                 data={visibleProducts}
-                contentContainerStyle={{ paddingHorizontal: 2, paddingBottom: 16, paddingTop: 8 }}
+                contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 96, paddingTop: 8 }}
                 ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                 keyExtractor={(item) => item.id}
                 ListEmptyComponent={
@@ -50,13 +60,38 @@ export default function Products() {
                     <ProductRow
                         product={item}
                         onChangeQuantity={changeQuantity}
-                        onRemove={removeProduct}
+                        onRemove={setdeletingProductId}
                         onRename={startEditing}
                     />
                 )}
             />
 
+            <ConfirmDialog
+                visible={deletingProduct !== undefined}
+                title="Eliminare il prodotto?"
+                message={deletingProduct ? `"${deletingProduct.name}" verrà rimosso definitivamente dalla dispensa.` : ''}
+                confirmLabel="Elimina"
+                onConfirm={confirmDelete}
+                onCancel={() => setdeletingProductId(null)}
+            />
+
             <ProductModal {...modalProps} />
+            <ScanModal
+                visible={scanOpen}
+                onClose={() => setScanOpen(false)}
+                onAdded={() => { }}
+            />
+
+            <FAB.Group
+                visible
+                open={fabOpen}
+                icon={fabOpen ? 'close' : 'plus'}
+                actions={[
+                    { icon: 'pencil-outline', label: 'Aggiungi manualmente', onPress: startAdding },
+                    { icon: 'barcode-scan', label: 'Scansiona barcode', onPress: () => setScanOpen(true) },
+                ]}
+                onStateChange={({ open }) => setFabOpen(open)}
+            />
         </View>
 
     );
