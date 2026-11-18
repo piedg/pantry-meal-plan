@@ -1,30 +1,19 @@
-import { StyleSheet, View } from 'react-native';
-import { SegmentedButtons, Text, useTheme } from 'react-native-paper';
-import { ThemeMode, useThemeMode } from '../../../context/ThemeContext';
+import { Stack } from 'expo-router';
+import { useTheme } from 'react-native-paper';
 
-export default function Settings() {
+export default function SettingsLayout() {
     const { colors } = useTheme();
-    const { mode, setMode } = useThemeMode();
 
     return (
-        <View style={styles.container}>
-            <Text variant="titleMedium">Tema</Text>
-            <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
-                Con "Sistema" l'app segue il tema del telefono.
-            </Text>
-            <SegmentedButtons
-                value={mode}
-                onValueChange={(v) => setMode(v as ThemeMode)}
-                buttons={[
-                    { value: 'system', label: 'Sistema', icon: 'cellphone' },
-                    { value: 'light', label: 'Chiaro', icon: 'white-balance-sunny' },
-                    { value: 'dark', label: 'Scuro', icon: 'weather-night' },
-                ]}
-            />
-        </View>
+        <Stack
+            screenOptions={{
+                headerStyle: { backgroundColor: colors.surface },
+                headerTintColor: colors.onSurface,
+                headerShadowVisible: false,
+                contentStyle: { backgroundColor: colors.background },
+            }}
+        >
+            <Stack.Screen name="index" options={{ title: 'Impostazioni' }} />
+        </Stack>
     );
 }
-
-const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16, gap: 12 },
-});

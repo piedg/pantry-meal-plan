@@ -50,5 +50,8 @@ export function useMealPlan() {
         });
     };
 
-    return { plan, loaded, getMeal, setMeal };
+    const clearPlan = () => setPlan({});
+    const replacePlan = (next: MealPlan) => setPlan(next);
+
+    return { plan, loaded, getMeal, setMeal, clearPlan, replacePlan };
 }

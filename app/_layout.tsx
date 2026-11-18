@@ -1,6 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
+import { MealPlanProvider } from '../context/MealPlanContext';
 import { PantryProvider } from '../context/PantryContext';
 import { ThemeModeProvider, useThemeMode } from '../context/ThemeContext';
 import { darkTheme, lightTheme } from '../theme/theme';
@@ -26,7 +27,9 @@ function ThemedApp() {
         <PaperProvider theme={paperTheme}>
             <ThemeProvider value={navTheme}>
                 <PantryProvider>
-                    <Stack screenOptions={{ headerShown: false }} />
+                    <MealPlanProvider>
+                        <Stack screenOptions={{ headerShown: false }} />
+                    </MealPlanProvider>
                 </PantryProvider>
             </ThemeProvider>
         </PaperProvider>

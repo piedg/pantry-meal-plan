@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Card, Divider, IconButton, Text, useTheme } from 'react-native-paper';
 import { MealEditDialog } from '../../../components/MealEditDialog';
 import { MealSlotRow, SLOT_LABELS } from '../../../components/MealSlotRow';
-import { useMealPlan } from '../../../hooks/useMealPlan';
+import { useMealPlanContext } from '../../../context/MealPlanContext';
 import { MealSlot } from '../../../types/MealPlan';
 import { addDays, dayName, shortDate, startOfWeek, toDateKey, weekDays, weekLabel } from '../../../utils/week';
 
@@ -13,7 +13,7 @@ type Editing = { dateKey: string; slot: MealSlot; title: string };
 
 export default function MealPlanScreen() {
     const { colors } = useTheme();
-    const { getMeal, setMeal } = useMealPlan();
+    const { getMeal, setMeal } = useMealPlanContext();
 
     const todayKey = toDateKey(new Date());
     const currentWeekStart = startOfWeek(new Date());
