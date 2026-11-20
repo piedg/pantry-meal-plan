@@ -1,19 +1,20 @@
 import { FlatList, StyleSheet, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { usePantryContext } from '../../../context/PantryContext';
 import { ProductRow } from '../../../components/ProductRow';
 import { useState } from 'react';
 import { Filter } from '../../../types/Filter';
-import { ProductDraft } from '../../../types/ProductDraft';
 import { useProductEditor } from '../../../hooks/useProductEditor';
 import { ProductModal } from '../../../components/ProductModal';
-import { FAB, SegmentedButtons, Text } from 'react-native-paper';
+import { FAB, Searchbar, SegmentedButtons, Text } from 'react-native-paper';
 import { ScanModal } from '../../../components/ScanModal';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
-
-const emptyDraft: ProductDraft = { name: '', quantity: '1', packSize: '', packUnit: 'g' };
+import { matchesQuery } from '../../../utils/search';
 
 export default function Products() {
 
+    const { focusSearch } = useLocalSearchParams<{ focusSearch?: string }>();
+    const [query, setQuery] = useState('');
     const { products, changeQuantity, removeProduct } = usePantryContext();
     const { startEditing, startAdding, modalProps } = useProductEditor();
     const [fabOpen, setFabOpen] = useState(false);
@@ -23,8 +24,12 @@ export default function Products() {
 
     const deletingProduct = products.find((p) => p.id === deletingProductId);
 
-    const visibleProducts =
-        filter === 'missing' ? products.filter((p) => p.quantity === 0) : filter === 'owned' ? products.filter((p) => p.quantity > 0) : products;
+    const visibleProducts = products.filter(
+        (p) =>
+            (filter === 'all' || (filter === 'missing' ? p.quantity === 0 : p.quantity > 0)) &&
+            matchesQuery(p.name, query),
+    );
+    const isSearching = query.trim() !== '';
     const missingCount = products.filter((p) => p.quantity === 0).length;
     const ownedCount = products.filter((p) => p.quantity > 0).length;
 
@@ -35,6 +40,15 @@ export default function Products() {
 
     return (
         <View style={styles.container}>
+            <Searchbar
+                placeholder="Cerca un prodotto"
+                value={query}
+                onChangeText={setQuery}
+                autoFocus={focusSearch === '1'}
+                autoCorrect={false}
+                returnKeyType="search"
+                style={styles.searchbar}
+            />
             <SegmentedButtons
                 value={filter}
                 onValueChange={(v) => setFilter(v as Filter)}
@@ -51,9 +65,15 @@ export default function Products() {
                 contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 96, paddingTop: 8 }}
                 ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                 keyExtractor={(item) => item.id}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
                 ListEmptyComponent={
                     <Text style={styles.empty}>
-                        {filter === 'missing' ? 'Non manca nulla' : 'Dispensa vuota'}
+                        {isSearching
+                            ? `Nessun prodotto trovato per "${query.trim()}"`
+                            : filter === 'missing'
+                              ? 'Non manca nulla'
+                              : 'Dispensa vuota'}
                     </Text>
                 }
                 renderItem={({ item }) => (
@@ -99,6 +119,7 @@ export default function Products() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, paddingTop: 20, paddingHorizontal: 16 },
+    searchbar: { marginBottom: 12 },
     title: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
     input: {
         borderWidth: 1,

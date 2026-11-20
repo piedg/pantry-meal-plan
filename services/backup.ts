@@ -52,26 +52,35 @@ export async function exportBackup(data: BackupData, appVersion: string): Promis
 // Restituisce null se l'utente annulla la scelta del file
 export async function pickBackup(): Promise<BackupData | null> {
     const result = await DocumentPicker.getDocumentAsync({
-        // Alcuni gestori file su Android non riconoscono .json come application/json
-        type: ['application/json', 'text/plain', 'application/octet-stream'],
+        // Qualsiasi file: molti gestori file su Android (Download, Drive, WhatsApp)
+        // assegnano ai .json un tipo MIME diverso e li renderebbero non selezionabili.
+        // Il contenuto viene comunque controllato da parseBackup.
+        type: '*/*',
         copyToCacheDirectory: true,
     });
     if (result.canceled) return null;
 
-    const text = await new File(result.assets[0].uri).text();
+    let text: string;
+    try {
+        text = await new File(result.assets[0].uri).text();
+    } catch (e) {
+        throw new BackupError(`Impossibile leggere il file: ${e instanceof Error ? e.message : String(e)}`);
+    }
     return parseBackup(text);
 }
 
 export function parseBackup(text: string): BackupData {
     let raw: unknown;
     try {
-        raw = JSON.parse(text);
+        // Toglie l'eventuale BOM aggiunto da alcuni editor (es. Blocco note su Windows)
+        raw = JSON.parse(text.replace(/^﻿/, ''));
     } catch {
         throw new BackupError('Il file non è un JSON valido.');
     }
 
+    // L'id resta "pantry" anche dopo il cambio nome, per leggere i backup già esportati
     if (!isObject(raw) || raw.app !== BACKUP_APP_ID) {
-        throw new BackupError('Questo file non è un backup di Pantry.');
+        throw new BackupError('Questo file non è un backup di Smarty Food.');
     }
     if (typeof raw.format === 'number' && raw.format > BACKUP_FORMAT) {
         throw new BackupError("Il backup è stato creato da una versione più recente dell'app. Aggiornala e riprova.");

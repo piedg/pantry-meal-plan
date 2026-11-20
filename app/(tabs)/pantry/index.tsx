@@ -1,6 +1,6 @@
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { Button, Card, Text, useTheme } from 'react-native-paper';
+import { Button, Card, Searchbar, Text, useTheme } from 'react-native-paper';
 import { usePantryContext } from '../../../context/PantryContext';
 
 export default function PantryHome() {
@@ -12,6 +12,18 @@ export default function PantryHome() {
 
     return (
         <View style={styles.container}>
+            <Pressable
+                accessibilityRole="search"
+                accessibilityLabel="Cerca un prodotto"
+                onPress={() =>
+                    router.navigate({ pathname: '/pantry/products', params: { focusSearch: '1' } })
+                }
+            >
+                <View pointerEvents="none">
+                    <Searchbar placeholder="Cerca un prodotto" value="" editable={false} />
+                </View>
+            </Pressable>
+
             <Card mode="contained" style={{ backgroundColor: colors.primaryContainer }}>
                 <Card.Content style={styles.summary}>
                     <View style={styles.stat}>

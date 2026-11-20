@@ -22,10 +22,12 @@ export function usePantry() {
                 if (raw) {
                     setProducts(JSON.parse(raw) as Product[])
                 }
+                // Solo dopo una lettura riuscita: se fallisce non salviamo,
+                // altrimenti la lista vuota sovrascriverebbe i dati salvati.
+                setLoaded(true);
             } catch (e) {
                 console.warn("Errore nel caricamento", e)
             }
-            setLoaded(true);
         };
         load();
     }, []);

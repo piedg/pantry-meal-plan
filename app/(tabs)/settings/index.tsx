@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import { List, SegmentedButtons, Snackbar, Text, useTheme } from 'react-native-paper';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
@@ -8,6 +8,8 @@ import { usePantryContext } from '../../../context/PantryContext';
 import { ThemeMode, useThemeMode } from '../../../context/ThemeContext';
 import { BackupData, BackupError, exportBackup, pickBackup } from '../../../services/backup';
 import { MealPlan } from '../../../types/MealPlan';
+
+const CREDITS_EMAIL = 'pietro.digiovanni.dev@gmail.com';
 
 type PendingAction =
     | { kind: 'clear-pantry' }
@@ -20,7 +22,8 @@ function countMeals(plan: MealPlan): number {
 }
 
 function errorMessage(e: unknown, fallback: string): string {
-    return e instanceof BackupError ? e.message : fallback;
+    if (e instanceof BackupError) return e.message;
+    return e instanceof Error && e.message ? `${fallback}: ${e.message}` : fallback;
 }
 
 export default function Settings() {
@@ -166,6 +169,13 @@ export default function Settings() {
                         title="Versione"
                         description={version}
                         left={(props) => <List.Icon {...props} icon="information-outline" />}
+                    />
+                    <List.Item
+                        title="Credits"
+                        description={`Pietro Di Giovanni\n${CREDITS_EMAIL}`}
+                        descriptionNumberOfLines={2}
+                        left={(props) => <List.Icon {...props} icon="account-heart-outline" />}
+                        onPress={() => Linking.openURL(`mailto:${CREDITS_EMAIL}`).catch(() => {})}
                     />
                 </List.Section>
             </ScrollView>

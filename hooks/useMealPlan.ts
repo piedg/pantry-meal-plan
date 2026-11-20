@@ -15,10 +15,12 @@ export function useMealPlan() {
                 if (raw) {
                     setPlan(JSON.parse(raw) as MealPlan);
                 }
+                // Solo dopo una lettura riuscita: se fallisce non salviamo,
+                // altrimenti il piano vuoto sovrascriverebbe i dati salvati.
+                setLoaded(true);
             } catch (e) {
                 console.warn('Errore nel caricamento del meal plan', e);
             }
-            setLoaded(true);
         };
         load();
     }, []);
